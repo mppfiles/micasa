@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Appliance Monitor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <i class="fas fa-home"></i>
+                Home Appliance Monitor
+            </h1>
+            <div class="connection-status" id="connection-status">
+                <i class="fas fa-circle"></i>
+                <span>Connecting...</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="devices-grid">
+                <!-- Washer Card -->
+                <div class="device-card" id="washer-card">
+                    <div class="device-header">
+                        <div class="device-icon">
+                            <i class="fas fa-shirt"></i>
+                        </div>
+                        <div class="device-info">
+                            <h2 class="device-name">Washer</h2>
+                            <div class="device-status" id="washer-status">
+                                <span class="status-indicator unknown"></span>
+                                <span class="status-text">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="device-details">
+                        <div class="time-remaining" id="washer-time">
+                            <i class="fas fa-clock"></i>
+                            <span>--</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="washer-progress"></div>
+                        </div>
+                        <div class="last-updated" id="washer-updated">
+                            Last updated: --
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dryer Card -->
+                <div class="device-card" id="dryer-card">
+                    <div class="device-header">
+                        <div class="device-icon">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <div class="device-info">
+                            <h2 class="device-name">Dryer</h2>
+                            <div class="device-status" id="dryer-status">
+                                <span class="status-indicator unknown"></span>
+                                <span class="status-text">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="device-details">
+                        <div class="time-remaining" id="dryer-time">
+                            <i class="fas fa-clock"></i>
+                            <span>--</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="dryer-progress"></div>
+                        </div>
+                        <div class="last-updated" id="dryer-updated">
+                            Last updated: --
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="refresh-btn" id="refresh-btn">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+                <button class="toggle-auto-refresh" id="auto-refresh-toggle">
+                    <i class="fas fa-play"></i>
+                    Auto Refresh: ON
+                </button>
+            </div>
+
+            <div class="system-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> System Status</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Last Update:</span>
+                            <span class="value" id="system-last-update">--</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Auto Refresh:</span>
+                            <span class="value" id="auto-refresh-status">Enabled</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Connection:</span>
+                            <span class="value" id="connection-info">WebSocket</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Smart Home Monitor | Raspberry Pi 5</p>
+        </footer>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="error-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Connection Error</h3>
+                <button class="close-btn" id="close-error">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">Unable to connect to the server. Please check your connection.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
