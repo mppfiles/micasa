@@ -17,6 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 const ENABLE_HTTPS = process.env.ENABLE_HTTPS === 'true';
+const FORCE_HTTPS_REDIRECT = process.env.FORCE_HTTPS_REDIRECT === 'true';
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './certs/key.pem';
 const SSL_CERT_PATH = process.env.SSL_CERT_PATH || './certs/cert.pem';
 
@@ -148,6 +149,20 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors(corsOptions));
+
+// HTTP to HTTPS redirect middleware
+app.use((req, res, next) => {
+  // Only redirect if both HTTPS is enabled and redirect is forced
+  if (ENABLE_HTTPS && FORCE_HTTPS_REDIRECT && !req.secure && req.get('x-forwarded-proto') !== 'https') {
+    const httpsPort = HTTPS_PORT === 443 ? '' : `:${HTTPS_PORT}`;
+    const redirectUrl = `https://${req.get('host').split(':')[0]}${httpsPort}${req.originalUrl}`;
+    
+    console.log(`Redirecting HTTP to HTTPS: ${req.url} → ${redirectUrl}`);
+    return res.redirect(301, redirectUrl);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 

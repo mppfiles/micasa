@@ -3,9 +3,12 @@ services:
     build: .
     container_name: smartthings-home-monitor
     restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_BIND_SERVICE
     ports:
-      - "3000:3000"
-      - "3443:3443"
+      - "${PORT}:3000"
+      - "${HTTPS_PORT}:3443"
     volumes:
       - ./certs:/app/certs:ro
     environment:
@@ -13,9 +16,10 @@ services:
       - SMARTTHINGS_TOKEN=${SMARTTHINGS_TOKEN}
       - WASHER_DEVICE_ID=${WASHER_DEVICE_ID}
       - DRYER_DEVICE_ID=${DRYER_DEVICE_ID}
-      - PORT=3000
-      - HTTPS_PORT=3443
+      - PORT=${PORT}
+      - HTTPS_PORT=${HTTPS_PORT}
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - FORCE_HTTPS_REDIRECT=${FORCE_HTTPS_REDIRECT:-true}
       - SSL_KEY_PATH=${SSL_KEY_PATH:-./certs/key.pem}
       - SSL_CERT_PATH=${SSL_CERT_PATH:-./certs/cert.pem}
       - REFRESH_INTERVAL=${REFRESH_INTERVAL:-30000}
