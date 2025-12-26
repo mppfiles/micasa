@@ -5,16 +5,24 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "3443:3443"
+    volumes:
+      - ./certs:/app/certs:ro
     environment:
       - NODE_ENV=production
       - SMARTTHINGS_TOKEN=${SMARTTHINGS_TOKEN}
       - WASHER_DEVICE_ID=${WASHER_DEVICE_ID}
       - DRYER_DEVICE_ID=${DRYER_DEVICE_ID}
       - PORT=3000
+      - HTTPS_PORT=3443
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-./certs/key.pem}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-./certs/cert.pem}
       - REFRESH_INTERVAL=${REFRESH_INTERVAL:-30000}
       - API_TIMEOUT=${API_TIMEOUT:-10000}
       - WASHER_NAME=${WASHER_NAME:-Washer}
       - DRYER_NAME=${DRYER_NAME:-Dryer}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
     networks:
       - smartthings
     healthcheck:
