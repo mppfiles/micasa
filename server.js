@@ -33,7 +33,7 @@ if (ENABLE_HTTPS) {
       const privateKey = fs.readFileSync(SSL_KEY_PATH, 'utf8');
       const certificate = fs.readFileSync(SSL_CERT_PATH, 'utf8');
       const credentials = { key: privateKey, cert: certificate };
-      
+
       httpsServer = https.createServer(credentials, app);
       primaryServer = httpsServer;
       console.log('HTTPS enabled with provided certificates');
@@ -52,7 +52,7 @@ const server = primaryServer;
 const REFRESH_INTERVAL = parseInt(process.env.REFRESH_INTERVAL) || 30000;
 
 // CORS Configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : ['http://localhost:3000', 'https://localhost:3000'];
 
@@ -60,12 +60,12 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
+
     // In development, allow any origin
     if (process.env.NODE_ENV === 'development') {
       return callback(null, true);
     }
-    
+
     // Check if origin is in allowed list or matches pattern
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (allowedOrigin === '*') return true;
@@ -75,7 +75,7 @@ const corsOptions = {
       }
       return origin === allowedOrigin;
     });
-    
+
     if (isAllowed) {
       callback(null, true);
     } else {
@@ -101,13 +101,13 @@ const io = socketIo(server, {
 // Helper function to create valid CSP connect-src values
 const createCSPConnectSrc = () => {
   const baseConnectSrc = ["'self'"];
-  
+
   // In development, be more permissive
   if (process.env.NODE_ENV === 'development') {
     baseConnectSrc.push('http://localhost:*', 'https://localhost:*', 'ws://localhost:*', 'wss://localhost:*');
     return baseConnectSrc;
   }
-  
+
   // In production, only add valid (non-wildcard) origins
   if (process.env.ALLOWED_ORIGINS) {
     const validOrigins = process.env.ALLOWED_ORIGINS
@@ -127,10 +127,10 @@ const createCSPConnectSrc = () => {
         }
         return results;
       });
-    
+
     baseConnectSrc.push(...validOrigins);
   }
-  
+
   return baseConnectSrc;
 };
 
@@ -176,9 +176,9 @@ app.get('/api/status', async (req, res) => {
     res.json(status);
   } catch (error) {
     console.error('Error fetching device status:', error.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch device status',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -186,15 +186,15 @@ app.get('/api/status', async (req, res) => {
 app.get('/api/washer', async (req, res) => {
   try {
     const status = await smartThingsService.getDeviceStatus(
-      process.env.WASHER_DEVICE_ID, 
+      process.env.WASHER_DEVICE_ID,
       process.env.WASHER_NAME || 'Washer'
     );
     res.json(status);
   } catch (error) {
     console.error('Error fetching washer status:', error.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch washer status',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -202,23 +202,23 @@ app.get('/api/washer', async (req, res) => {
 app.get('/api/dryer', async (req, res) => {
   try {
     const status = await smartThingsService.getDeviceStatus(
-      process.env.DRYER_DEVICE_ID, 
+      process.env.DRYER_DEVICE_ID,
       process.env.DRYER_NAME || 'Dryer'
     );
     res.json(status);
   } catch (error) {
     console.error('Error fetching dryer status:', error.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch dryer status',
-      message: error.message 
+      message: error.message
     });
   }
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -232,7 +232,7 @@ app.get('/', (req, res) => {
 // Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  
+
   // Send current status to new client
   if (lastStatus.washer && lastStatus.dryer) {
     socket.emit('status-update', lastStatus);
@@ -296,7 +296,7 @@ const startPeriodicUpdates = () => {
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Something went wrong!',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
@@ -310,16 +310,16 @@ app.use((req, res) => {
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down gracefully...');
-  
+
   const shutdownPromises = [];
-  
+
   if (httpsServer) {
     shutdownPromises.push(new Promise(resolve => httpsServer.close(resolve)));
   }
   if (httpServer) {
     shutdownPromises.push(new Promise(resolve => httpServer.close(resolve)));
   }
-  
+
   Promise.all(shutdownPromises).then(() => {
     console.log('All servers closed.');
     process.exit(0);
@@ -349,7 +349,7 @@ const startServers = () => {
   if (!process.env.WASHER_DEVICE_ID || !process.env.DRYER_DEVICE_ID) {
     console.warn('WARNING: Device IDs not set in environment');
   }
-  
+
   // Start periodic updates
   startPeriodicUpdates();
 };
