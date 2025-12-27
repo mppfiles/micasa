@@ -57,6 +57,15 @@ class SmartThingsService {
       let status = 'idle';
       let remainingTime = 0;
       let progress = 0;
+      
+      // Debug logging to understand the actual API response structure
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`\n=== DEBUG: ${deviceName} Device Status ===`);
+        console.log('Full response components:', JSON.stringify(components, null, 2));
+        if (components && components.main) {
+          console.log('Available main component capabilities:', Object.keys(components.main));
+        }
+      }
 
       // Common Samsung washer/dryer status mapping
       if (components && components.main) {
@@ -64,41 +73,80 @@ class SmartThingsService {
 
 // Check washer/dryer machine state
         if (main.washerOperatingState) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Found washerOperatingState:', JSON.stringify(main.washerOperatingState, null, 2));
+          }
           const operatingState = main.washerOperatingState.machineState?.value;
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Operating state value:', operatingState);
+          }
           status = this.mapOperatingState(operatingState);
 
           // Get completion time if available
           if (main.washerOperatingState.completionTime) {
             remainingTime = this.parseCompletionTime(main.washerOperatingState.completionTime.value);
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Completion time found:', main.washerOperatingState.completionTime.value, '-> parsed as:', remainingTime);
+            }
           }
         } else if (main.dryerOperatingState) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Found dryerOperatingState:', JSON.stringify(main.dryerOperatingState, null, 2));
+          }
           const operatingState = main.dryerOperatingState.machineState?.value;
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Operating state value:', operatingState);
+          }
           status = this.mapOperatingState(operatingState);
 
           // Get completion time if available
           if (main.dryerOperatingState.completionTime) {
             remainingTime = this.parseCompletionTime(main.dryerOperatingState.completionTime.value);
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Completion time found:', main.dryerOperatingState.completionTime.value, '-> parsed as:', remainingTime);
+            }
           }
         }
         // Try alternative field names for washer/dryer status
         else if (main.operation || main.operationState || main.machineState) {
           const operationField = main.operation || main.operationState || main.machineState;
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Found alternative operation field:', JSON.stringify(operationField, null, 2));
+          }
           const operatingState = operationField.value || operationField.operation?.value || operationField.state?.value;
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Alternative operating state value:', operatingState);
+          }
           status = this.mapOperatingState(operatingState);
         }
         // Check for Samsung specific washer job states
         else if (main.washerJobState) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Found washerJobState:', JSON.stringify(main.washerJobState, null, 2));
+          }
           const jobState = main.washerJobState.value;
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Job state value:', jobState);
+          }
           status = this.mapOperatingState(jobState);
         }
 
         // Alternative: Check switch status (some devices use this)
         else if (main.switch) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Found switch capability:', JSON.stringify(main.switch, null, 2));
+          }
           status = main.switch.switch?.value === 'on' ? 'running' : 'idle';
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Switch-based status:', status);
+          }
         }
 
 // Smart fallback: If we have remaining time but no explicit status, infer it
         if (status === 'idle' && remainingTime > 0) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Smart fallback: Device has remaining time but status is idle, changing to running');
+          }
           status = 'running';
         }
 
@@ -108,6 +156,15 @@ class SmartThingsService {
         } else if (main.dryerOperatingState?.progress) {
           progress = main.dryerOperatingState.progress.value || 0;
         }
+        
+        // Final debug summary
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Final status determined:', status);
+          console.log('Final remaining time:', remainingTime);
+          console.log('=== END DEBUG ===\n');
+        }
+      }
+      
       return {
         deviceId: deviceId,
         name: deviceName,
