@@ -142,12 +142,26 @@ class SmartThingsService {
           }
         }
 
-// Smart fallback: If we have remaining time but no explicit status, infer it
+        // Smart fallback: If we have remaining time but no explicit status, infer it
+        // BUT only if the device doesn't explicitly report a stopped state
         if (status === 'idle' && remainingTime > 0) {
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('Smart fallback: Device has remaining time but status is idle, changing to running');
+          // Check if device explicitly reports stopped state
+          const hasExplicitStopState = (main.washerOperatingState?.machineState?.value === 'stop') ||
+                                       (main.dryerOperatingState?.machineState?.value === 'stop') ||
+                                       (main.washerOperatingState?.washerJobState?.value === 'none');
+          
+          if (!hasExplicitStopState) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Smart fallback: Device has remaining time but status is idle, changing to running');
+            }
+            status = 'running';
+          } else {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Smart fallback skipped: Device explicitly reports stopped state despite remaining time');
+            }
+            // Clear remaining time since device is explicitly stopped
+            remainingTime = 0;
           }
-          status = 'running';
         }
 
         // Check for progress indication
@@ -258,7 +272,18 @@ class SmartThingsService {
           const completionTime = new Date(completionTimeValue);
           const now = new Date();
           const diffMs = completionTime.getTime() - now.getTime();
-          return Math.max(0, Math.floor(diffMs / (1000 * 60))); // Convert to minutes
+          const diffMinutes = Math.floor(diffMs / (1000 * 60));
+          
+          // Sanity check: if completion time is more than 24 hours in the future 
+          // or more than 1 hour in the past, treat as stale data
+          if (diffMinutes > (24 * 60) || diffMinutes < -60) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(`Ignoring stale completion time: ${completionTimeValue} (diff: ${diffMinutes} minutes)`);
+            }
+            return 0;
+          }
+          
+          return Math.max(0, diffMinutes);
         }
 
         // Handle duration formats like "PT45M" (ISO 8601 duration)
