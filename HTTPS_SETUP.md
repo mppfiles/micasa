@@ -2,34 +2,33 @@
 
 ## Quick Setup for Local Development
 
-### Option 1: Generate Self-Signed Certificates (Recommended for Development)
+### Option 1: Generate Self-Signed Certificates (Supports Local Domains)
 
-1. **Generate SSL certificates:**
+1. **Generate SSL certificates for your local network:**
 
    ```bash
    chmod +x scripts/generate-ssl-certs.sh
    ./scripts/generate-ssl-certs.sh
    ```
 
-2. **Update your .env file:**
+   The script will ask for your local domain (e.g., `raspberrypi.local`) and automatically include common local domains.
+
+### Option 2: Browser-Trusted Local Certificates (Recommended for Local Network)
+
+For certificates that don't show browser warnings on your local network:
+
+1. **Generate trusted local certificates:**
 
    ```bash
-   ENABLE_HTTPS=true
-   ALLOWED_ORIGINS=https://localhost:3443,http://localhost:3000
+   chmod +x scripts/setup-local-ssl.sh
+   ./scripts/setup-local-ssl.sh
    ```
 
-3. **Restart your application:**
+2. **Access your app without warnings:**
+   - 🔗 `https://raspberrypi.local:3443`
+   - 🔗 `https://your-pi-ip:3443`
 
-   ```bash
-   docker-compose down
-   docker-compose up --build
-   ```
-
-4. **Access your app:**
-   - HTTP: <http://localhost:3000>
-   - HTTPS: <https://localhost:3443> (accept the browser security warning)
-
-### Option 2: Using Existing Certificates
+### Option 3: Using Existing Certificates
 
 1. **Place your certificates in the certs/ directory:**
 
@@ -48,7 +47,87 @@
    ALLOWED_ORIGINS=https://your-domain.com,https://localhost:3443
    ```
 
-### Option 3: Production with Let's Encrypt
+### Option 3: Let's Encrypt on Raspberry Pi (Recommended for Production)
+
+For production use with real SSL certificates on your Raspberry Pi:
+
+#### Quick Setup:
+```bash
+sudo chmod +x scripts/simple-letsencrypt.sh
+sudo ./scripts/simple-letsencrypt.sh
+```
+
+#### Manual Setup:
+
+1. **Install certbot:**
+   ```bash
+   sudo apt update
+   sudo apt install certbot
+   ```
+
+2. **Get your certificate (choose one method):**
+
+   **Method A: Standalone (easiest)**
+   ```bash
+   sudo certbot certonly --standalone \
+     --email your-email@example.com \
+     --agree-tos \
+     -d your-domain.com
+   ```
+
+   **Method B: DNS validation (if port 80 is blocked)**
+   ```bash
+   sudo certbot certonly --manual \
+     --preferred-challenges dns \
+     --email your-email@example.com \
+     --agree-tos \
+     -d your-domain.com
+   ```
+
+3. **Copy certificates to your app:**
+   ```bash
+   sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem ./certs/cert.pem
+   sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem ./certs/key.pem
+   sudo chmod 644 ./certs/cert.pem
+   sudo chmod 600 ./certs/key.pem
+   ```
+
+4. **Update your .env file:**
+   ```bash
+   ENABLE_HTTPS=true
+   SSL_CERT_PATH=./certs/cert.pem
+   SSL_KEY_PATH=./certs/key.pem
+   ALLOWED_ORIGINS=https://your-domain.com
+   HTTPS_PORT=443
+   ```
+
+5. **Set up auto-renewal:**
+   ```bash
+   # Create renewal script
+   sudo tee /usr/local/bin/renew-micasa-certs.sh << 'EOF'
+   #!/bin/bash
+   certbot renew --quiet
+   if [ $? -eq 0 ]; then
+       cp /etc/letsencrypt/live/your-domain.com/fullchain.pem /path/to/your/app/certs/cert.pem
+       cp /etc/letsencrypt/live/your-domain.com/privkey.pem /path/to/your/app/certs/key.pem
+       chmod 644 /path/to/your/app/certs/cert.pem
+       chmod 600 /path/to/your/app/certs/key.pem
+       # Restart your app
+       systemctl restart your-app || docker-compose -f /path/to/your/app/docker-compose.yml restart
+   fi
+   EOF
+
+   sudo chmod +x /usr/local/bin/renew-micasa-certs.sh
+
+   # Add to crontab
+   (crontab -l 2>/dev/null; echo "0 3 * * 1 /usr/local/bin/renew-micasa-certs.sh") | crontab -
+   ```
+
+6. **Configure your router:**
+   - Port forward port 443 to your Raspberry Pi
+   - Ensure your domain points to your public IP
+
+### Option 4: Production with Reverse Proxy (Advanced)
 
 For production, use a reverse proxy like nginx with Let's Encrypt certificates:
 
