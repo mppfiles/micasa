@@ -149,7 +149,7 @@ class SmartThingsService {
           const hasExplicitStopState = (main.washerOperatingState?.machineState?.value === 'stop') ||
                                        (main.dryerOperatingState?.machineState?.value === 'stop') ||
                                        (main.washerOperatingState?.washerJobState?.value === 'none');
-          
+
           if (!hasExplicitStopState) {
             if (process.env.NODE_ENV !== 'production') {
               console.log('Smart fallback: Device has remaining time but status is idle, changing to running');
@@ -273,8 +273,8 @@ class SmartThingsService {
           const now = new Date();
           const diffMs = completionTime.getTime() - now.getTime();
           const diffMinutes = Math.floor(diffMs / (1000 * 60));
-          
-          // Sanity check: if completion time is more than 24 hours in the future 
+
+          // Sanity check: if completion time is more than 24 hours in the future
           // or more than 1 hour in the past, treat as stale data
           if (diffMinutes > (24 * 60) || diffMinutes < -60) {
             if (process.env.NODE_ENV !== 'production') {
@@ -282,7 +282,7 @@ class SmartThingsService {
             }
             return 0;
           }
-          
+
           return Math.max(0, diffMinutes);
         }
 
