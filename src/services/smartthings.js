@@ -57,7 +57,7 @@ class SmartThingsService {
       let status = 'idle';
       let remainingTime = 0;
       let progress = 0;
-      
+
       // Debug logging to understand the actual API response structure
       if (process.env.NODE_ENV !== 'production') {
         console.log(`\n=== DEBUG: ${deviceName} Device Status ===`);
@@ -156,7 +156,7 @@ class SmartThingsService {
         } else if (main.dryerOperatingState?.progress) {
           progress = main.dryerOperatingState.progress.value || 0;
         }
-        
+
         // Final debug summary
         if (process.env.NODE_ENV !== 'production') {
           console.log('Final status determined:', status);
@@ -164,7 +164,7 @@ class SmartThingsService {
           console.log('=== END DEBUG ===\n');
         }
       }
-      
+
       return {
         deviceId: deviceId,
         name: deviceName,
