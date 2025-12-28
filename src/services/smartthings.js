@@ -351,32 +351,48 @@ class SmartThingsService {
 
     const details = {};
 
-    // Extract current job phase - check the actual structure from status.json
+    // Extract current job phase - check both washer and dryer structures
     if (main['samsungce.washerOperatingState']?.washerJobPhase?.value) {
       details.currentPhase = main['samsungce.washerOperatingState'].washerJobPhase.value;
     } else if (main.washerOperatingState?.washerJobPhase?.value) {
       details.currentPhase = main.washerOperatingState.washerJobPhase.value;
+    } else if (main['samsungce.dryerOperatingState']?.dryerJobPhase?.value) {
+      details.currentPhase = main['samsungce.dryerOperatingState'].dryerJobPhase.value;
+    } else if (main.dryerOperatingState?.dryerJobPhase?.value) {
+      details.currentPhase = main.dryerOperatingState.dryerJobPhase.value;
     }
 
-    // Extract scheduled jobs for showing next steps
+    // Extract scheduled jobs for showing next steps - check both washer and dryer
     if (main['samsungce.washerOperatingState']?.scheduledJobs?.value) {
       details.scheduledJobs = main['samsungce.washerOperatingState'].scheduledJobs.value;
     } else if (main.washerOperatingState?.scheduledJobs?.value) {
       details.scheduledJobs = main.washerOperatingState.scheduledJobs.value;
+    } else if (main['samsungce.dryerOperatingState']?.scheduledJobs?.value) {
+      details.scheduledJobs = main['samsungce.dryerOperatingState'].scheduledJobs.value;
+    } else if (main.dryerOperatingState?.scheduledJobs?.value) {
+      details.scheduledJobs = main.dryerOperatingState.scheduledJobs.value;
     }
 
-    // Extract machine state for better context
+    // Extract machine state for better context - check both washer and dryer
     if (main['samsungce.washerOperatingState']?.operatingState?.value) {
       details.machineState = main['samsungce.washerOperatingState'].operatingState.value;
     } else if (main.washerOperatingState?.operatingState?.value) {
       details.machineState = main.washerOperatingState.operatingState.value;
+    } else if (main['samsungce.dryerOperatingState']?.operatingState?.value) {
+      details.machineState = main['samsungce.dryerOperatingState'].operatingState.value;
+    } else if (main.dryerOperatingState?.operatingState?.value) {
+      details.machineState = main.dryerOperatingState.operatingState.value;
     }
 
-    // Also try to get washerJobState as a fallback
+    // Also try to get washer/dryer job state as a fallback
     if (main['samsungce.washerOperatingState']?.washerJobState?.value && !details.currentPhase) {
       details.currentPhase = main['samsungce.washerOperatingState'].washerJobState.value;
     } else if (main.washerOperatingState?.washerJobState?.value && !details.currentPhase) {
       details.currentPhase = main.washerOperatingState.washerJobState.value;
+    } else if (main['samsungce.dryerOperatingState']?.dryerJobState?.value && !details.currentPhase) {
+      details.currentPhase = main['samsungce.dryerOperatingState'].dryerJobState.value;
+    } else if (main.dryerOperatingState?.dryerJobState?.value && !details.currentPhase) {
+      details.currentPhase = main.dryerOperatingState.dryerJobState.value;
     }
 
     // Add total remaining time for calculating job progress

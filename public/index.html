@@ -82,12 +82,24 @@
                     </div>
 
                     <div class="device-details">
+                        <div class="current-phase" id="dryer-phase" style="display: none;">
+                            <i class="fas fa-cog"></i>
+                            <span class="phase-text">--</span>
+                        </div>
                         <div class="time-remaining" id="dryer-time">
                             <i class="fas fa-clock"></i>
                             <span>--</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill" id="dryer-progress"></div>
+                        </div>
+                        <div class="scheduled-jobs" id="dryer-jobs" style="display: none;">
+                            <div class="jobs-header">
+                                <i class="fas fa-list"></i>
+                                <span>Upcoming Steps:</span>
+                            </div>
+                            <div class="jobs-list" id="dryer-jobs-list">
+                            </div>
                         </div>
                         <div class="last-updated" id="dryer-updated">
                             Last updated: --

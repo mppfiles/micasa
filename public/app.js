@@ -147,10 +147,10 @@ class HomeMonitor {
         }
 
         // Update current phase if available
-        this.updateCurrentPhase(phaseElement, deviceData.detailedStatus);
+        this.updateCurrentPhase(phaseElement, deviceData.detailedStatus, deviceData.status);
 
         // Update scheduled jobs if available
-        this.updateScheduledJobs(jobsElement, deviceData.detailedStatus);
+        this.updateScheduledJobs(jobsElement, deviceData.detailedStatus, deviceData.status);
 
         // Update remaining time
         if (timeElement) {
@@ -159,7 +159,7 @@ class HomeMonitor {
                 if (deviceData.remainingTime > 0) {
                     timeSpan.textContent = this.formatTime(deviceData.remainingTime);
                 } else {
-                    timeSpan.textContent = deviceData.status === 'running' ? 'Unknown' : '--';
+                    timeSpan.textContent = (deviceData.status === 'running') ? 'Unknown' : '--';
                 }
             }
         }
@@ -199,22 +199,50 @@ class HomeMonitor {
         return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
     }
 
-    updateCurrentPhase(phaseElement, detailedStatus) {
+    updateCurrentPhase(phaseElement, detailedStatus, deviceStatus) {
         if (!phaseElement) return;
 
-        if (detailedStatus?.currentPhase) {
+        if (detailedStatus?.currentPhase || (deviceStatus === 'complete' || deviceStatus === 'finished') || deviceStatus === 'none' || deviceStatus === 'idle') {
             const phaseText = phaseElement.querySelector('.phase-text');
+            const phaseIcon = phaseElement.querySelector('i');
+            
             if (phaseText) {
-                phaseText.textContent = detailedStatus.currentPhase;
+                if (deviceStatus === 'complete' || deviceStatus === 'finished') {
+                    phaseText.textContent = 'Completed';
+                } else if (deviceStatus === 'none' || deviceStatus === 'idle') {
+                    phaseText.textContent = 'Idle';
+                } else {
+                    phaseText.textContent = detailedStatus.currentPhase;
+                }
             }
+            
+            if (phaseIcon) {
+                if (deviceStatus === 'complete' || deviceStatus === 'finished') {
+                    phaseIcon.className = 'fas fa-check-circle';
+                    phaseElement.className = 'current-phase completed';
+                } else if (deviceStatus === 'none' || deviceStatus === 'idle') {
+                    phaseIcon.className = 'fas fa-pause-circle';
+                    phaseElement.className = 'current-phase idle';
+                } else {
+                    phaseIcon.className = 'fas fa-cog';
+                    phaseElement.className = 'current-phase';
+                }
+            }
+            
             phaseElement.style.display = 'flex';
         } else {
             phaseElement.style.display = 'none';
         }
     }
 
-    updateScheduledJobs(jobsElement, detailedStatus) {
+    updateScheduledJobs(jobsElement, detailedStatus, deviceStatus) {
         if (!jobsElement) return;
+
+        // Hide upcoming steps entirely if the device is finished
+        if (deviceStatus === 'complete' || deviceStatus === 'finished' || deviceStatus === 'idle') {
+            jobsElement.style.display = 'none';
+            return;
+        }
 
         if (detailedStatus?.scheduledJobs && detailedStatus.scheduledJobs.length > 0) {
             const jobsList = document.getElementById(jobsElement.id.replace('-jobs', '-jobs-list'));

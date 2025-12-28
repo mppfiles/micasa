@@ -243,6 +243,28 @@ body {
     animation: spin 2s linear infinite;
 }
 
+.current-phase.completed {
+    color: var(--success-color);
+    background: rgba(40, 167, 69, 0.1);
+    border-left-color: var(--success-color);
+}
+
+.current-phase.completed i {
+    animation: none;
+    color: var(--success-color);
+}
+
+.current-phase.idle {
+    color: var(--gray-color);
+    background: rgba(108, 117, 125, 0.1);
+    border-left-color: var(--gray-color);
+}
+
+.current-phase.idle i {
+    animation: none;
+    color: var(--gray-color);
+}
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
