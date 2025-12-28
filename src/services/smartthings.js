@@ -365,7 +365,7 @@ class SmartThingsService {
       details.scheduledJobs = main.washerOperatingState.scheduledJobs.value;
     }
 
-    // Extract machine state for better context  
+    // Extract machine state for better context
     if (main['samsungce.washerOperatingState']?.operatingState?.value) {
       details.machineState = main['samsungce.washerOperatingState'].operatingState.value;
     } else if (main.washerOperatingState?.operatingState?.value) {

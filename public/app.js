@@ -223,15 +223,15 @@ class HomeMonitor {
 
                 // Calculate total remaining time for all jobs
                 const totalJobTime = detailedStatus.scheduledJobs.reduce((sum, job) => sum + job.timeInMin, 0);
-                
+
                 // Find which job should be current based on elapsed time
                 let cumulativeTime = 0;
                 let currentJobIndex = -1;
-                
+
                 for (let i = 0; i < detailedStatus.scheduledJobs.length; i++) {
                     const job = detailedStatus.scheduledJobs[i];
                     cumulativeTime += job.timeInMin;
-                    
+
                     // If this job's cumulative time is greater than elapsed, this is current or future
                     if (cumulativeTime > (totalJobTime - (detailedStatus.totalRemainingTime || 0))) {
                         if (currentJobIndex === -1) {
@@ -243,7 +243,7 @@ class HomeMonitor {
 
                 // If we have a current phase, use that to determine the current job
                 if (detailedStatus.currentPhase) {
-                    const currentPhaseJob = detailedStatus.scheduledJobs.findIndex(job => 
+                    const currentPhaseJob = detailedStatus.scheduledJobs.findIndex(job =>
                         job.jobName.toLowerCase() === detailedStatus.currentPhase.toLowerCase()
                     );
                     if (currentPhaseJob !== -1) {

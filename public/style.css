@@ -503,51 +503,51 @@ body {
     .container {
         padding: 15px;
     }
-    
+
     .header {
         padding: 20px;
         flex-direction: column;
         text-align: center;
     }
-    
+
     .header h1 {
         font-size: 1.5rem;
     }
-    
+
     .devices-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .device-card {
         padding: 20px;
     }
-    
+
     .device-header {
         gap: 15px;
     }
-    
+
     .device-icon {
         width: 50px;
         height: 50px;
         font-size: 1.3rem;
     }
-    
+
     .device-name {
         font-size: 1.3rem;
     }
-    
+
     .controls {
         flex-direction: column;
         align-items: center;
     }
-    
+
     .refresh-btn, .toggle-auto-refresh {
         width: 100%;
         max-width: 250px;
         justify-content: center;
     }
-    
+
     .info-grid {
         grid-template-columns: 1fr;
         gap: 10px;
@@ -558,13 +558,13 @@ body {
     .device-card {
         padding: 15px;
     }
-    
+
     .device-header {
         flex-direction: column;
         text-align: center;
         gap: 10px;
     }
-    
+
     .modal-content {
         width: 95%;
     }
