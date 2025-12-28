@@ -205,7 +205,7 @@ class HomeMonitor {
         if (detailedStatus?.currentPhase || (deviceStatus === 'complete' || deviceStatus === 'finished') || deviceStatus === 'none' || deviceStatus === 'idle') {
             const phaseText = phaseElement.querySelector('.phase-text');
             const phaseIcon = phaseElement.querySelector('i');
-            
+
             if (phaseText) {
                 if (deviceStatus === 'complete' || deviceStatus === 'finished') {
                     phaseText.textContent = 'Completed';
@@ -215,7 +215,7 @@ class HomeMonitor {
                     phaseText.textContent = detailedStatus.currentPhase;
                 }
             }
-            
+
             if (phaseIcon) {
                 if (deviceStatus === 'complete' || deviceStatus === 'finished') {
                     phaseIcon.className = 'fas fa-check-circle';
@@ -228,7 +228,7 @@ class HomeMonitor {
                     phaseElement.className = 'current-phase';
                 }
             }
-            
+
             phaseElement.style.display = 'flex';
         } else {
             phaseElement.style.display = 'none';
