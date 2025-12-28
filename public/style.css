@@ -226,6 +226,82 @@ body {
     color: var(--primary-color);
 }
 
+.current-phase {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    background: rgba(0, 122, 204, 0.1);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.current-phase i {
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.phase-text {
+    text-transform: capitalize;
+    font-weight: 600;
+}
+
+.scheduled-jobs {
+    background: rgba(108, 117, 125, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 3px solid var(--gray-color);
+}
+
+.jobs-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    margin-bottom: 8px;
+}
+
+.jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+}
+
+.job-item.current-job {
+    background: rgba(0, 122, 204, 0.15);
+    border-left: 3px solid var(--primary-color);
+    font-weight: 600;
+}
+
+.job-name {
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.job-time {
+    color: var(--gray-color);
+    font-size: 0.8rem;
+}
+
 .progress-bar {
     width: 100%;
     height: 8px;

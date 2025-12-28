@@ -156,7 +156,7 @@ app.use((req, res, next) => {
   if (ENABLE_HTTPS && FORCE_HTTPS_REDIRECT && !req.secure && req.get('x-forwarded-proto') !== 'https') {
     const httpsPort = HTTPS_PORT === 443 ? '' : `:${HTTPS_PORT}`;
     const redirectUrl = `https://${req.get('host').split(':')[0]}${httpsPort}${req.originalUrl}`;
-    
+
     console.log(`Redirecting HTTP to HTTPS: ${req.url} → ${redirectUrl}`);
     return res.redirect(301, redirectUrl);
   }

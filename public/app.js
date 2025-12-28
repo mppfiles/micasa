@@ -5,7 +5,7 @@ class HomeMonitor {
         this.lastUpdateTime = null;
         this.connectionRetryCount = 0;
         this.maxRetries = 5;
-        
+
         this.init();
     }
 
@@ -18,7 +18,7 @@ class HomeMonitor {
     initSocket() {
         try {
             this.socket = io();
-            
+
             this.socket.on('connect', () => {
                 console.log('Connected to server');
                 this.connectionRetryCount = 0;
@@ -78,11 +78,11 @@ class HomeMonitor {
     updateConnectionStatus(status) {
         const statusElement = document.getElementById('connection-status');
         const connectionInfo = document.getElementById('connection-info');
-        
+
         if (!statusElement) return;
 
         statusElement.className = `connection-status ${status}`;
-        
+
         const statusMessages = {
             connecting: 'Connecting...',
             connected: 'Connected',
@@ -97,7 +97,7 @@ class HomeMonitor {
 
         const icon = statusElement.querySelector('i');
         const text = statusElement.querySelector('span');
-        
+
         if (icon) icon.className = statusIcons[status];
         if (text) text.textContent = statusMessages[status];
         if (connectionInfo) {
@@ -126,6 +126,8 @@ class HomeMonitor {
         const timeElement = document.getElementById(`${deviceType}-time`);
         const progressElement = document.getElementById(`${deviceType}-progress`);
         const updatedElement = document.getElementById(`${deviceType}-updated`);
+        const phaseElement = document.getElementById(`${deviceType}-phase`);
+        const jobsElement = document.getElementById(`${deviceType}-jobs`);
 
         if (!card || !statusElement) return;
 
@@ -135,14 +137,20 @@ class HomeMonitor {
         // Update status indicator and text
         const indicator = statusElement.querySelector('.status-indicator');
         const statusText = statusElement.querySelector('.status-text');
-        
+
         if (indicator) {
             indicator.className = `status-indicator ${deviceData.status}`;
         }
-        
+
         if (statusText) {
-            statusText.textContent = this.formatStatus(deviceData.status);
+            statusText.textContent = this.formatStatus(deviceData.status, deviceData.detailedStatus);
         }
+
+        // Update current phase if available
+        this.updateCurrentPhase(phaseElement, deviceData.detailedStatus);
+
+        // Update scheduled jobs if available
+        this.updateScheduledJobs(jobsElement, deviceData.detailedStatus);
 
         // Update remaining time
         if (timeElement) {
@@ -173,7 +181,12 @@ class HomeMonitor {
         }
     }
 
-    formatStatus(status) {
+    formatStatus(status, detailedStatus) {
+        // If we have detailed status with current phase, use that for more descriptive display
+        if (detailedStatus?.currentPhase && status === 'running') {
+            return `Running - ${detailedStatus.currentPhase.charAt(0).toUpperCase() + detailedStatus.currentPhase.slice(1)}`;
+        }
+
         const statusMap = {
             running: 'Running',
             idle: 'Idle',
@@ -182,16 +195,93 @@ class HomeMonitor {
             unknown: 'Unknown',
             error: 'Error'
         };
-        
+
         return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    updateCurrentPhase(phaseElement, detailedStatus) {
+        if (!phaseElement) return;
+
+        if (detailedStatus?.currentPhase) {
+            const phaseText = phaseElement.querySelector('.phase-text');
+            if (phaseText) {
+                phaseText.textContent = detailedStatus.currentPhase;
+            }
+            phaseElement.style.display = 'flex';
+        } else {
+            phaseElement.style.display = 'none';
+        }
+    }
+
+    updateScheduledJobs(jobsElement, detailedStatus) {
+        if (!jobsElement) return;
+
+        if (detailedStatus?.scheduledJobs && detailedStatus.scheduledJobs.length > 0) {
+            const jobsList = document.getElementById(jobsElement.id.replace('-jobs', '-jobs-list'));
+            if (jobsList) {
+                jobsList.innerHTML = '';
+
+                // Calculate total remaining time for all jobs
+                const totalJobTime = detailedStatus.scheduledJobs.reduce((sum, job) => sum + job.timeInMin, 0);
+                
+                // Find which job should be current based on elapsed time
+                let cumulativeTime = 0;
+                let currentJobIndex = -1;
+                
+                for (let i = 0; i < detailedStatus.scheduledJobs.length; i++) {
+                    const job = detailedStatus.scheduledJobs[i];
+                    cumulativeTime += job.timeInMin;
+                    
+                    // If this job's cumulative time is greater than elapsed, this is current or future
+                    if (cumulativeTime > (totalJobTime - (detailedStatus.totalRemainingTime || 0))) {
+                        if (currentJobIndex === -1) {
+                            currentJobIndex = i;
+                        }
+                        break;
+                    }
+                }
+
+                // If we have a current phase, use that to determine the current job
+                if (detailedStatus.currentPhase) {
+                    const currentPhaseJob = detailedStatus.scheduledJobs.findIndex(job => 
+                        job.jobName.toLowerCase() === detailedStatus.currentPhase.toLowerCase()
+                    );
+                    if (currentPhaseJob !== -1) {
+                        currentJobIndex = currentPhaseJob;
+                    }
+                }
+
+                // Show only current and future jobs
+                const remainingJobs = detailedStatus.scheduledJobs.slice(currentJobIndex >= 0 ? currentJobIndex : 0);
+
+                // If there's only one remaining job (the current one), don't show the section
+                if (remainingJobs.length > 1) {
+                    remainingJobs.forEach((job, index) => {
+                        const jobItem = document.createElement('div');
+                        const isCurrent = index === 0;
+                        jobItem.className = isCurrent ? 'job-item current-job' : 'job-item';
+                        jobItem.innerHTML = `
+                            <span class="job-name">${job.jobName}${isCurrent ? ' (current)' : ''}</span>
+                            <span class="job-time">${job.timeInMin}min</span>
+                        `;
+                        jobsList.appendChild(jobItem);
+                    });
+                    jobsElement.style.display = 'block';
+                } else {
+                    jobsElement.style.display = 'none';
+                }
+            }
+        } else {
+            jobsElement.style.display = 'none';
+        }
     }
 
     formatTime(minutes) {
         if (!minutes || minutes <= 0) return '0m';
-        
+
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
-        
+
         if (hours > 0) {
             return `${hours}h ${mins}m`;
         }
@@ -200,12 +290,12 @@ class HomeMonitor {
 
     formatTimestamp(timestamp) {
         if (!timestamp) return 'Never';
-        
+
         try {
             const date = new Date(timestamp);
             const now = new Date();
             const diffSeconds = Math.floor((now - date) / 1000);
-            
+
             if (diffSeconds < 60) {
                 return 'Just now';
             } else if (diffSeconds < 3600) {
@@ -225,7 +315,7 @@ class HomeMonitor {
 
     refreshStatus() {
         const refreshBtn = document.getElementById('refresh-btn');
-        
+
         if (!this.socket || !this.socket.connected) {
             this.showError('Not connected to server. Please wait for connection to be established.');
             return;
@@ -258,14 +348,14 @@ class HomeMonitor {
 
     toggleAutoRefresh() {
         this.autoRefreshEnabled = !this.autoRefreshEnabled;
-        
+
         const toggle = document.getElementById('auto-refresh-toggle');
         const statusElement = document.getElementById('auto-refresh-status');
-        
+
         if (toggle) {
             const icon = toggle.querySelector('i');
             const text = toggle.childNodes[toggle.childNodes.length - 1];
-            
+
             if (this.autoRefreshEnabled) {
                 toggle.classList.remove('disabled');
                 if (icon) {
@@ -282,7 +372,7 @@ class HomeMonitor {
                 if (text) text.textContent = ' Auto Refresh: OFF';
             }
         }
-        
+
         if (statusElement) {
             statusElement.textContent = this.autoRefreshEnabled ? 'Enabled' : 'Disabled';
         }
@@ -290,7 +380,7 @@ class HomeMonitor {
 
     updateSystemInfo() {
         const systemUpdate = document.getElementById('system-last-update');
-        
+
         if (systemUpdate && this.lastUpdateTime) {
             systemUpdate.textContent = this.formatTimestamp(this.lastUpdateTime.toISOString());
         }
@@ -299,7 +389,7 @@ class HomeMonitor {
     showError(message) {
         const modal = document.getElementById('error-modal');
         const messageElement = document.getElementById('error-message');
-        
+
         if (modal && messageElement) {
             messageElement.textContent = message;
             modal.style.display = 'block';
@@ -316,11 +406,11 @@ class HomeMonitor {
     handleConnectionError() {
         this.connectionRetryCount++;
         this.updateConnectionStatus('disconnected');
-        
+
         if (this.connectionRetryCount <= this.maxRetries) {
             const retryDelay = Math.min(1000 * Math.pow(2, this.connectionRetryCount), 30000);
             console.log(`Retrying connection in ${retryDelay/1000} seconds...`);
-            
+
             setTimeout(() => {
                 this.updateConnectionStatus('connecting');
                 this.initSocket();

@@ -186,6 +186,8 @@ class SmartThingsService {
         remainingTime: remainingTime,
         progress: progress,
         lastUpdated: new Date().toISOString(),
+        // Add detailed status information
+        detailedStatus: this.extractDetailedStatus(components?.main, remainingTime),
         rawData: deviceStatus // Include raw data for debugging
       };
 
@@ -342,6 +344,51 @@ class SmartThingsService {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  }
+
+  extractDetailedStatus(main, remainingTime = 0) {
+    if (!main) return null;
+
+    const details = {};
+
+    // Extract current job phase - check the actual structure from status.json
+    if (main['samsungce.washerOperatingState']?.washerJobPhase?.value) {
+      details.currentPhase = main['samsungce.washerOperatingState'].washerJobPhase.value;
+    } else if (main.washerOperatingState?.washerJobPhase?.value) {
+      details.currentPhase = main.washerOperatingState.washerJobPhase.value;
+    }
+
+    // Extract scheduled jobs for showing next steps
+    if (main['samsungce.washerOperatingState']?.scheduledJobs?.value) {
+      details.scheduledJobs = main['samsungce.washerOperatingState'].scheduledJobs.value;
+    } else if (main.washerOperatingState?.scheduledJobs?.value) {
+      details.scheduledJobs = main.washerOperatingState.scheduledJobs.value;
+    }
+
+    // Extract machine state for better context  
+    if (main['samsungce.washerOperatingState']?.operatingState?.value) {
+      details.machineState = main['samsungce.washerOperatingState'].operatingState.value;
+    } else if (main.washerOperatingState?.operatingState?.value) {
+      details.machineState = main.washerOperatingState.operatingState.value;
+    }
+
+    // Also try to get washerJobState as a fallback
+    if (main['samsungce.washerOperatingState']?.washerJobState?.value && !details.currentPhase) {
+      details.currentPhase = main['samsungce.washerOperatingState'].washerJobState.value;
+    } else if (main.washerOperatingState?.washerJobState?.value && !details.currentPhase) {
+      details.currentPhase = main.washerOperatingState.washerJobState.value;
+    }
+
+    // Add total remaining time for calculating job progress
+    details.totalRemainingTime = remainingTime;
+
+    // Debug logging to see what we're actually getting
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('extractDetailedStatus - details found:', details);
+      console.log('extractDetailedStatus - main keys:', Object.keys(main));
+    }
+
+    return Object.keys(details).length > 0 ? details : null;
   }
 }
 
